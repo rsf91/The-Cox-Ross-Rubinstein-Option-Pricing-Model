@@ -8,7 +8,7 @@ Created on Sun Jul 14 17:44:40 2019
 
 import numpy as np
 
-def BinomialTreeCRR(type,S0, K, r, sigma, T, N=200 ,american="false"):
+def BinomialTreeCRR(option_type,S0, K, r, sigma, T, N=200 ,american="false"):
     """
     Params:
         type: C (call) or P (put)
@@ -59,10 +59,10 @@ def BinomialTreeCRR(type,S0, K, r, sigma, T, N=200 ,american="false"):
     oneMinusP = 1 - p
     
     # Compute the leaves for every element [:] in the array
-    if type =="C": #if it's a call 
+    if option_type =="C": #if it's a call 
         value[:] = np.maximum(stock_price-strike, 0)
         
-    elif type == "P": #if it's a put
+    elif option_type == "P": #if it's a put
         value[:] = np.maximum(-stock_price+strike, 0)
     
     """
@@ -74,17 +74,69 @@ def BinomialTreeCRR(type,S0, K, r, sigma, T, N=200 ,american="false"):
 
     for i in range(N):
         #For each (except last one) = bla bla * (except first + except last one) - this is to couple all the leaves at each node
-        value[:-1]=np.exp(-r * dT) * (p * value[1:] + oneMinusP * value[:-1])
+        #
+        # O que vai acontecer aqui é o seguinte:
+        # 
+        # vamos assumir que a arvore abriu até uma lista de 5 valores = array([ 0.        ,  0.        ,  0.        , 22.14027582, 49.18246976])
+        # O resultado do modelo que vc vai fazer é [ 0 + 0 , 0 + 0, 0 + 22, 22 + 49 ]. Isso é igual a somar duas listas. [0,0,0,22] + [0,0,22,49]
+
+        # Isso é igual a pegar a lista toda menos o primeiro termo e chamar de UP, 
+        # pegar a lista toda menos o ultimo termo e chamar de DOWN
+
+        # ISSO QUE ACONTECE AQUI EMBAIXO - quebrei pra ficar mais evidente
+
+        up_list = value[1:]
+        down_list = value[:-1]
+        value[:-1]=np.exp(-r * dT) * (p * up_list + oneMinusP * down_list)
+
         #multiplying all stock prices as we are going backwards. we are using u and not p as we are walking backwards from bottom to top 
         stock_price[:]=stock_price[:]*u
         
         #only for american options as for american options we must check at each node if the option is worth more alive then dead
         if american=='true':
            #check if the option is worth more alive or dead (i.e. comparing the payoff against the value of the option)
-            if type =="C":
+            if option_type =="C":
                 value[:]=np.maximum(value[:],stock_price[:]-strike[:])
-            elif type == "P":
+            elif option_type == "P":
                 value[:]=np.maximum(value[:],-stock_price[:]+strike[:])
                 
     # print first value - i.e. first element of array 
     return value[0]
+
+
+def main():
+    """
+    Params:
+        option_type: C (call) or P (put)
+        S0: stock price at t=0
+        K: strike price
+        r: constant riskless short rate
+        sigma: constant volatility (i.e. standard deviation of returns) of S
+        T: the horizion in year fractions (i.e. 1, 2, 3.5 etc)
+        american: false (european) or true (american)
+    Assumptions:
+        1) the original Cox, Ross & Rubinstein (CRR) method as been used (paper below)
+            http://static.stevereads.com/papers_to_read/option_pricing_a_simplified_approach.pdf
+        2) no dividends
+    Output:
+        Value of the option today
+    """   
+    option_type = "C"
+    S0 = 100
+    K = 100
+    r = 0.05
+    sigma = 0.20
+    T = 1
+    american = 'false'
+    result = BinomialTreeCRR(option_type,
+                    S0 = S0,
+                    K = K, 
+                    r=r, 
+                    sigma=sigma, 
+                    T=T, 
+                    N=10000 ,
+                    american=american)
+    return result
+
+x = main()
+print(x)
