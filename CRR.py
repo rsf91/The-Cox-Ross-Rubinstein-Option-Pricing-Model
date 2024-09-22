@@ -7,8 +7,9 @@ Created on Sun Jul 14 17:44:40 2019
 """
 
 import numpy as np
+import copy
 
-def BinomialTreeCRR(option_type,S0, K, r, sigma, T, N=200 ,american="false"):
+def BinomialTreeCRR(option_type,S0, K, r, sigma, T, N=200 ,american="false", portfolio = False):
     """
     Params:
         type: C (call) or P (put)
@@ -71,37 +72,90 @@ def BinomialTreeCRR(option_type,S0, K, r, sigma, T, N=200 ,american="false"):
         2) in loop (one for each N), we calculate the price of the option (backwards) by pairing the outcomes 2 by 2
         3) we finally arrive to the price of the option today
     """
+    value_backwards = []
+    delta_backwards = []
+    stock_backwards = []
+    
+    if portfolio == False:
+        for i in range(N):
+            #For each (except last one) = bla bla * (except first + except last one) - this is to couple all the leaves at each node
+            #
+            # O que vai acontecer aqui é o seguinte:
+            # 
+            # vamos assumir que a arvore abriu até uma lista de 5 valores = array([ 0.        ,  0.        ,  0.        , 22.14027582, 49.18246976])
+            # O resultado do modelo que vc vai fazer é [ 0 + 0 , 0 + 0, 0 + 22, 22 + 49 ]. Isso é igual a somar duas listas. [0,0,0,22] + [0,0,22,49]
 
-    for i in range(N):
-        #For each (except last one) = bla bla * (except first + except last one) - this is to couple all the leaves at each node
-        #
-        # O que vai acontecer aqui é o seguinte:
-        # 
-        # vamos assumir que a arvore abriu até uma lista de 5 valores = array([ 0.        ,  0.        ,  0.        , 22.14027582, 49.18246976])
-        # O resultado do modelo que vc vai fazer é [ 0 + 0 , 0 + 0, 0 + 22, 22 + 49 ]. Isso é igual a somar duas listas. [0,0,0,22] + [0,0,22,49]
+            # Isso é igual a pegar a lista toda menos o primeiro termo e chamar de UP, 
+            # pegar a lista toda menos o ultimo termo e chamar de DOWN
 
-        # Isso é igual a pegar a lista toda menos o primeiro termo e chamar de UP, 
-        # pegar a lista toda menos o ultimo termo e chamar de DOWN
+            # ISSO QUE ACONTECE AQUI EMBAIXO - quebrei pra ficar mais evidente
 
-        # ISSO QUE ACONTECE AQUI EMBAIXO - quebrei pra ficar mais evidente
+            up_list = value[1:]
+            down_list = value[:-1]
+            value[:-1]=np.exp(-r * dT) * (p * up_list + oneMinusP * down_list)
+            value_backwards.append((value[:-(i+1)]))
+            #multiplying all stock prices as we are going backwards. we are using u and not p as we are walking backwards from bottom to top 
+            stock_price[:]=stock_price[:]*u
+            
+            #only for american options as for american options we must check at each node if the option is worth more alive then dead
+            if american=='true':
+            #check if the option is worth more alive or dead (i.e. comparing the payoff against the value of the option)
+                if option_type =="C":
+                    value[:]=np.maximum(value[:],stock_price[:]-strike[:])
+                elif option_type == "P":
+                    value[:]=np.maximum(value[:],-stock_price[:]+strike[:])
+            
+        print(value)
+    
+    if portfolio == True:
+        for i in range(N):
+            up_list = value[1:]
+            down_list = value[:-1]
 
-        up_list = value[1:]
-        down_list = value[:-1]
-        value[:-1]=np.exp(-r * dT) * (p * up_list + oneMinusP * down_list)
+            s_up_list = stock_price[1:]
+            s_down_list = stock_price[:-1]
 
-        #multiplying all stock prices as we are going backwards. we are using u and not p as we are walking backwards from bottom to top 
-        stock_price[:]=stock_price[:]*u
+            delta = (up_list - down_list) / (s_up_list - s_down_list)
+
+            value_backwards.append(value.copy())
+            delta_backwards.append(delta.copy())
+            stock_backwards.append(stock_price.copy())
+            print(value_backwards)
+            print(delta_backwards)
+            print(stock_backwards)
+            
+
+            #Return VALUE
+
+            value[:-1]=np.exp(-r * dT) * (p * up_list + oneMinusP * down_list)
+            value = value[:-1]
+
+            #Return STOCK
+            stock_price[:]=stock_price[:]*u
+            stock_price = stock_price[:-1]
+
+            
+
+            #multiplying all stock prices as we are going backwards. we are using u and not p as we are walking backwards from bottom to top 
+            # stock_price[:]=stock_price[:]*u
+
+            #if len(value_backwards[-1]) == 2:
+            #    pass
+                # Should be true EITHER WAY
+
+            
+            #only for american options as for american options we must check at each node if the option is worth more alive then dead
+            if american=='true':
+            #check if the option is worth more alive or dead (i.e. comparing the payoff against the value of the option)
+                if option_type =="C":
+                    value[:]=np.maximum(value[:],stock_price[:]-strike[:])
+                elif option_type == "P":
+                    value[:]=np.maximum(value[:],-stock_price[:]+strike[:])
+            
         
-        #only for american options as for american options we must check at each node if the option is worth more alive then dead
-        if american=='true':
-           #check if the option is worth more alive or dead (i.e. comparing the payoff against the value of the option)
-            if option_type =="C":
-                value[:]=np.maximum(value[:],stock_price[:]-strike[:])
-            elif option_type == "P":
-                value[:]=np.maximum(value[:],-stock_price[:]+strike[:])
                 
     # print first value - i.e. first element of array 
-    return value[0]
+    return value[0], value_backwards, stock_backwards, delta_backwards
 
 
 def main():
@@ -134,8 +188,9 @@ def main():
                     r=r, 
                     sigma=sigma, 
                     T=T, 
-                    N=10000 ,
-                    american=american)
+                    N=3 ,
+                    american=american,
+                    portfolio = True)
     return result
 
 x = main()
