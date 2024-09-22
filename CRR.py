@@ -151,11 +151,22 @@ def BinomialTreeCRR(option_type,S0, K, r, sigma, T, N=200 ,american="false", por
                     value[:]=np.maximum(value[:],stock_price[:]-strike[:])
                 elif option_type == "P":
                     value[:]=np.maximum(value[:],-stock_price[:]+strike[:])
+        
+    message = "A seguir vc vai ver os valores relevantes do calculo da arvore. \nO preço da opcao é {}, e o delta atual para fazer o hedge é {}".format(
+        value[0],
+        delta_backwards[-1][0]
+    )
+    message_2 = "Essa funcao tambem te retornará esses valores da seguinte forma: value[0], value_backwards, stock_backwards, delta_backwards"
+
+    print(message)
+    print(message_2)
+
+    return value[0], value_backwards, stock_backwards, delta_backwards
             
         
                 
     # print first value - i.e. first element of array 
-    return value[0], value_backwards, stock_backwards, delta_backwards
+    return value[0]
 
 
 def main():
