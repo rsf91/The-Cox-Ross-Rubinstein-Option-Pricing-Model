@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sun Jul 14 17:44:40 2019
+Created on 2024 Sept 24 17:44:40
 
-@author: mattiacalzetta
+@author: roferreira23
+
+based on work of @author: mattiacalzetta
+
 """
 
 import numpy as np
@@ -152,16 +155,21 @@ def BinomialTreeCRR(option_type,S0, K, r, sigma, T, N=200 ,american="false", por
                 elif option_type == "P":
                     value[:]=np.maximum(value[:],-stock_price[:]+strike[:])
         
-    message = "A seguir vc vai ver os valores relevantes do calculo da arvore. \nO preço da opcao é {}, e o delta atual para fazer o hedge é {}".format(
-        value[0],
-        delta_backwards[-1][0]
-    )
-    message_2 = "Essa funcao tambem te retornará esses valores da seguinte forma: value[0], value_backwards, stock_backwards, delta_backwards"
+        message = "A seguir vc vai ver os valores relevantes do calculo da arvore. \nO preço da opcao é {}, e o delta atual para fazer o hedge é {}".format(
+            value[0],
+            delta_backwards[-1][0]
+        )
+        message_2 = "Essa funcao tambem te retornará esses valores da seguinte forma: value[0], value_backwards, stock_backwards, delta_backwards"
 
-    print(message)
-    print(message_2)
+        print(message)
+        print(message_2)
 
-    return value[0], value_backwards, stock_backwards, delta_backwards
+        return {
+                "value" : value[0], 
+                "value_tree": value_backwards, 
+                "stock_tree": stock_backwards, 
+                "delta_tree" : delta_backwards
+                }
             
         
                 
@@ -204,5 +212,15 @@ def main():
                     portfolio = True)
     return result
 
+
+
 x = main()
+""" 
+#x.keys() : dict_keys(['value', 'value_tree', 'stock_tree', 'delta_tree'])
+# value : valor do PayOff ajustado ao preço atual
+# value_tree : Árvore feita do ultimo nó pra trás para o valor da Opcao
+# stock_tree : Árvore feita do ultimo nó pra trás para o valor da Açao
+# delta_tree : Árvore feita do ultimo nó pra trás para o valor que o Delta deve ser para garantir Portfolio para próxima etapa
+"""
 print(x)
+
