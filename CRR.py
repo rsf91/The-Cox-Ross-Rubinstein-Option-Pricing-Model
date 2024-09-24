@@ -123,9 +123,9 @@ def BinomialTreeCRR(option_type,S0, K, r, sigma, T, N=200 ,american="false", por
             value_backwards.append(value.copy())
             delta_backwards.append(delta.copy())
             stock_backwards.append(stock_price.copy())
-            print(value_backwards)
-            print(delta_backwards)
-            print(stock_backwards)
+            #print(value_backwards)
+            #print(delta_backwards)
+            #print(stock_backwards)
             
 
             #Return VALUE
@@ -155,11 +155,11 @@ def BinomialTreeCRR(option_type,S0, K, r, sigma, T, N=200 ,american="false", por
                 elif option_type == "P":
                     value[:]=np.maximum(value[:],-stock_price[:]+strike[:])
         
-        message = "A seguir vc vai ver os valores relevantes do calculo da arvore. \nO preço da opcao é {}, e o delta atual para fazer o hedge é {}".format(
+        message = "\n\nA seguir vc vai ver os valores relevantes do calculo da arvore. \nO preço da opcao é {}, e o delta atual para fazer o hedge é {}".format(
             value[0],
             delta_backwards[-1][0]
         )
-        message_2 = "Essa funcao tambem te retornará esses valores da seguinte forma: value[0], value_backwards, stock_backwards, delta_backwards"
+        message_2 = "\nEssa funcao tambem te retornará esses valores da seguinte forma: value[0], value_backwards, stock_backwards, delta_backwards"
 
         print(message)
         print(message_2)
@@ -207,7 +207,7 @@ def main():
                     r=r, 
                     sigma=sigma, 
                     T=T, 
-                    N=3 ,
+                    N=10**3 ,
                     american=american,
                     portfolio = True)
     return result
@@ -222,5 +222,8 @@ x = main()
 # stock_tree : Árvore feita do ultimo nó pra trás para o valor da Açao
 # delta_tree : Árvore feita do ultimo nó pra trás para o valor que o Delta deve ser para garantir Portfolio para próxima etapa
 """
-print(x)
 
+print("\nPayoff discounted is {}".format(x['value']))
+print("Initial Delta for perfect Hedge is {}".format(x['delta_tree'][-1]))
+
+print(x)
